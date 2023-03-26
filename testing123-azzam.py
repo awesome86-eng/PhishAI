@@ -1,5 +1,5 @@
 
-API_KEY="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"
+API_KEY="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"
 
 import openai
 
@@ -11,8 +11,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 
-data= pd.read_excel("C:\\Users\\Azzam\Desktop\\codeStuff\\CompanyDatabase.xlsx" )
-print(data)
+data= pd.read_excel("./CompanyDatabase.xlsx" )
 
 CompanyAddress = data.loc[0, 'Company Address']
 CompanyName = data.loc[0,'Company name']
@@ -20,61 +19,71 @@ TargetEmail = data.loc[0,'Target Email']
 EmployeeName = data.loc[0, 'Employee Name']
 EmployeeTeam = data.loc[0,'Employee Team or sub division']
 Projects = data.loc[0,'Relevant projects']
+Colleague = data.loc[0,'Colleague']
 
-
-print (CompanyAddress)
 
 
 openai.api_key = API_KEY
-prompt = f" generate me a phishing email for {EmployeeName} who works at {CompanyName} from his new coworker working on  {Projects} with {EmployeeTeam} team. With a subject line in the form SUBJECT: "
-
-#response = openai.Completion.create(engine="text-davinci-001", prompt=prompt,max_tokens=2000)
+prompt = (f"Generate me a phishing email for {EmployeeName} who works at {CompanyName} with his new coworker {Colleague} working on  {Projects} with {EmployeeTeam} team."
+" Also include a subject line in the form 'Subject:' on top of the email."
+" Do not include any fake attachments, Malicious Link, extra names or fake email addresses.")
 
 prompt_string = str(prompt)
 
-print(type(prompt))
-print(type(prompt_string))
+
 messages1=[{"role":"user", "content": prompt_string}]
 chat = openai.ChatCompletion.create(
      model = "gpt-3.5-turbo", messages = messages1)
 reply = chat.choices[0].message.content
-print(f"ChatGPT: {reply}")
+print(reply)
 
 
 filteredReply = reply.split("\n")
-first_line = filteredReply[2]
+first_line = filteredReply[0]
 filteredReply = first_line.split(":")[1]
-print (first_line)
+filteredReply = filteredReply.strip()
+print (filteredReply)
 
 
-# Set up the SMTP server
-#smtp_server = "smtp.gmail.com"
-#smtp_port = 587  # For starttls
-#smtp_username = "your_email_address@gmail.com"
-#smtp_password = "your_email_password"
+# # Set up the SMTP server
+# smtp_server = "smtp.gmail.com"
+# smtp_port = 587  # For starttls
+# smtp_username = "your_email_address@gmail.com"
+# smtp_password = "your_email_password"
 
-# Set up the email message
-#sender = "your_email_address@gmail.com"
-#recipient = "recipient_email_address@example.com"
+# # Set up the email message
+# sender = "your_email_address@gmail.com"
+# recipient = "recipient_email_address@example.com"
 
-reply1 = reply.split("\n")
+reply_temp = reply.split("\n")
+reply1 = []
+for x in reply1:
+    if x != '':
+        reply1.append(x)
 
-reply1 = reply1[4:]
+reply1 = reply1[1:]
+with open("output.txt","w") as text_file:
+    for item in reply_temp:
+        # write each item on a new line
+        text_file.write("%s\n" % item)
+    text_file.close
+file=open("output.txt","r")
+data = file.read().splitlines(True)
 
-print(TargetEmail)
+
 smtp_server= "smtp-relay.sendinblue.com"
 smtp_port = 587
 smtp_username = "teamshazam86@gmail.com"
 smtp_password = "RjOJyY96t2bwFLN0"
-sender = "sanankhan629@gmail.com"
+sender = "teamshazam86@gmail.com"
 recipient = TargetEmail
 subject = filteredReply
-body = f"\n {reply1} "
+body = ' '.join(data[1:])
 
 
  # make a MIME object to define parts of the email
 msg = MIMEMultipart()
-msg['From'] = "sanankhan629@gmail.com"
+msg['From'] = "teamshazam86@gmail.com"
 msg['To'] =  TargetEmail
 msg['Subject'] = subject
 
